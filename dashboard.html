@@ -479,7 +479,7 @@
 
                     <div class="form-group">
                         <label>Telefon Numarası</label>
-                        <input type="tel" id="customer-phone" placeholder="Örn: 5551234567" required>
+                        <input type="tel" id="customer-phone" placeholder="Örn: 5551234567 (isteğe bağlı)">
                         <small style="color: #666; margin-top: 5px; display: block;">WhatsApp mesajı göndermek için (5XX ile başlayın)</small>
                     </div>
 
@@ -495,8 +495,17 @@
                             <option value="14">14 Gün</option>
                             <option value="30">30 Gün</option>
                             <option value="45">45 Gün</option>
+                            <option value="manuel">📅 Manuel Tarih</option>
                             <option value="senet">Senet (Özel Tarih)</option>
                         </select>
+                    </div>
+
+                    <div class="form-group hidden" id="manuel-date">
+                        <label>Vade Tarihi</label>
+                        <input type="date" id="manuel-date-input" min="">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            💡 Geçmiş veya yakın tarihli ödeme ekleyebilirsiniz
+                        </small>
                     </div>
 
                     <div class="form-group hidden" id="senet-dates">
@@ -779,7 +788,13 @@
 
         document.getElementById('payment-type').addEventListener('change', function() {
             const senetDates = document.getElementById('senet-dates');
+            const manuelDate = document.getElementById('manuel-date');
             const amountGroup = document.getElementById('amount').closest('.form-group');
+            
+            // Hepsini gizle
+            senetDates.classList.add('hidden');
+            manuelDate.classList.add('hidden');
+            amountGroup.style.display = 'block';
             
             if (this.value === 'senet') {
                 senetDates.classList.remove('hidden');
@@ -787,9 +802,12 @@
                 senetCount = 1;
                 renderSenetList();
                 calculateSenetTotal();
-            } else {
-                senetDates.classList.add('hidden');
-                amountGroup.style.display = 'block';
+            } else if (this.value === 'manuel') {
+                manuelDate.classList.remove('hidden');
+                // Bugünün tarihini min olarak ayarla
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('manuel-date-input').min = '';
+                document.getElementById('manuel-date-input').value = today;
             }
         });
 
@@ -822,7 +840,7 @@
                             await addDoc(collection(window.firebaseDb, 'payments'), {
                                 userId,
                                 customerName,
-                                customerPhone,
+                                customerPhone: customerPhone || '', // Opsiyonel
                                 amount: parseFloat(amt),
                                 dueDate: date,
                                 note: note ? `${note} (${i}. Senet)` : `${i}. Senet`,
@@ -837,6 +855,24 @@
                         alert('⚠️ En az bir senet için tutar ve tarih girmelisiniz!');
                         return;
                     }
+                } else if (paymentType === 'manuel') {
+                    // Manuel tarih seçimi
+                    const manuelDateValue = document.getElementById('manuel-date-input').value;
+                    if (!manuelDateValue) {
+                        alert('⚠️ Lütfen vade tarihini seçin!');
+                        return;
+                    }
+                    
+                    await addDoc(collection(window.firebaseDb, 'payments'), {
+                        userId,
+                        customerName,
+                        customerPhone: customerPhone || '', // Opsiyonel
+                        amount,
+                        dueDate: manuelDateValue,
+                        note,
+                        isPaid: false,
+                        createdAt: Timestamp.now()
+                    });
                 } else {
                     const today = new Date();
                     const dueDate = new Date(today);
@@ -845,7 +881,7 @@
                     await addDoc(collection(window.firebaseDb, 'payments'), {
                         userId,
                         customerName,
-                        customerPhone,
+                        customerPhone: customerPhone || '', // Opsiyonel
                         amount,
                         dueDate: dueDate.toISOString().split('T')[0],
                         note,
