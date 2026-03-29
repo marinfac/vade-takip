@@ -540,12 +540,15 @@
         function renderUsers() {
             const container = document.getElementById('users-container');
 
-            if (allUsers.length === 0) {
+            // Silinen kullanıcıları filtrele
+            const activeUsers = allUsers.filter(u => u.status !== 'deleted');
+
+            if (activeUsers.length === 0) {
                 container.innerHTML = '<div class="empty-state">Henüz kullanıcı yok</div>';
                 return;
             }
 
-            const sortedUsers = [...allUsers].sort((a, b) => {
+            const sortedUsers = [...activeUsers].sort((a, b) => {
                 if (a.status === 'pending' && b.status !== 'pending') return -1;
                 if (a.status !== 'pending' && b.status === 'pending') return 1;
                 return new Date(b.createdAt) - new Date(a.createdAt);
@@ -655,10 +658,10 @@
 
         // Kullanıcı Sil
         async function deleteUser(userId, email) {
-            if (!confirm(`${email} kullanıcısını kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) return;
+            if (!confirm(`${email} kullanıcısını kalıcı olarak silmek istediğinize emin misiniz?\n\n⚠️ ÖNEMLİ: Kullanıcı giriş yapamaz hale gelecek.\nAncak Firebase Auth'tan manuel silinmesi gerekir.`)) return;
 
             try {
-                const { doc, deleteDoc, collection, query, where, getDocs } = window.firebaseModules;
+                const { doc, deleteDoc, updateDoc, collection, query, where, getDocs } = window.firebaseModules;
                 
                 // Kullanıcının ödemelerini sil
                 const paymentsQuery = query(
@@ -671,14 +674,18 @@
                     await deleteDoc(doc(window.firebaseDb, 'payments', paymentDoc.id));
                 }
 
-                // Kullanıcıyı sil
-                await deleteDoc(doc(window.firebaseDb, 'users', userId));
+                // Kullanıcıyı 'deleted' durumuna al (Auth'tan silmek için backend gerekli)
+                await updateDoc(doc(window.firebaseDb, 'users', userId), {
+                    status: 'deleted',
+                    deletedAt: new Date().toISOString(),
+                    deletedEmail: email  // Hangi mail silindi kaydet
+                });
                 
-                alert('✅ Kullanıcı ve tüm ödemeleri silindi!');
+                alert(`✅ Kullanıcı silindi!\n\n⚠️ NOT: Firebase Auth'tan manuel silinmesi gerekir:\n\n1. Firebase Console → Authentication\n2. ${email} ara\n3. Kullanıcıyı sil\n\nBu yapılmazsa aynı mail ile tekrar kayıt olunamaz!`);
                 await loadUsers();
             } catch (error) {
                 console.error('Silme hatası:', error);
-                alert('Kullanıcı silinemedi!');
+                alert('Kullanıcı silinemedi: ' + error.message);
             }
         }
 
