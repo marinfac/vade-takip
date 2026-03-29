@@ -2,7 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vade Takip">
+    <meta name="theme-color" content="#2e7d32">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%232e7d32' width='100' height='100'/><text y='75' font-size='70' fill='white' text-anchor='middle' x='50'>💰</text></svg>">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVmFkZSBUYWtpcCBTaXN0ZW1pIiwic2hvcnRfbmFtZSI6IlZhZGUgVGFraXAiLCJkZXNjcmlwdGlvbiI6IkF0bGFzcGV0IFBldCDDnHLDvG5sZXJpIC0gTcO8xZ90ZXJpIFZhZGUgVGFraXAgU2lzdGVtaSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMmU3ZDMyIiwidGhlbWVfY29sb3IiOiIjMmU3ZDMyIiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJz48cmVjdCBmaWxsPSclMjMyZTdkMzInIHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyByeD0nNDAnLz48dGV4dCB5PScxNDUnIGZvbnQtc2l6ZT0nMTIwJyBmaWxsPSd3aGl0ZScgdGV4dC1hbmNob3I9J21pZGRsZScgeD0nOTYnPvCfkrA8L3RleHQ+PC9zdmc+Iiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwiLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJz48cmVjdCBmaWxsPSclMjMyZTdkMzInIHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJyByeD0nMTAwJy8+PHRleHQgeT0nMzkwJyBmb250LXNpemU9JzMyMCcgZmlsbD0nd2hpdGUnIHRleHQtYW5jaG9yPSdtaWRkbGUnIHg9JzI1Nic+8J+SsDwvdGV4dD48L3N2Zz4iLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV19">
     <title>Vade Takip Sistemi - Dashboard</title>
     <style>
         * {
@@ -15,7 +21,9 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
             min-height: 100vh;
-            padding: 20px;
+            min-height: -webkit-fill-available;
+            padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+            -webkit-tap-highlight-color: transparent;
         }
 
         .container {
@@ -25,34 +33,52 @@
 
         .header {
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .header-left h1 {
             color: #2e7d32;
-            font-size: 24px;
+            font-size: clamp(18px, 5vw, 24px);
             margin-bottom: 5px;
         }
 
         .header-left p {
             color: #666;
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
         }
 
         .header-right {
-            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .user-info {
             color: #666;
             font-size: 13px;
-            margin-bottom: 5px;
+            flex: 1;
+        }
+
+        @media (min-width: 480px) {
+            .header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px;
+            }
+            
+            .header-right {
+                text-align: right;
+                flex-direction: column;
+            }
         }
 
         .btn-logout {
@@ -122,6 +148,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-primary {
@@ -129,9 +157,8 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.4);
+        .btn-primary:active {
+            transform: scale(0.98);
         }
 
         .payment-item {
@@ -229,11 +256,25 @@
             font-weight: 600;
             color: #666;
             transition: all 0.3s;
+            font-size: clamp(18px, 4vw, 14px);
+            touch-action: manipulation;
         }
 
         .tab.active {
             background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
             color: white;
+        }
+
+        .tab:active {
+            transform: scale(0.97);
+        }
+
+        /* Desktop - Show full text */
+        @media (min-width: 768px) {
+            .tab:nth-child(1)::after { content: " Dashboard"; }
+            .tab:nth-child(2)::after { content: " Ekle"; }
+            .tab:nth-child(3)::after { content: " Tümü"; }
+            .tab:nth-child(4)::after { content: " Geçmiş"; }
         }
 
         .hidden {
@@ -277,9 +318,10 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="showTab('add')">➕ Ödeme Ekle</button>
-            <button class="tab" onclick="showTab('all')">📋 Tüm Ödemeler</button>
+            <button class="tab active" onclick="showTab('dashboard')">📊</button>
+            <button class="tab" onclick="showTab('add')">➕</button>
+            <button class="tab" onclick="showTab('all')">📋</button>
+            <button class="tab" onclick="showTab('history')">🕐</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -378,6 +420,24 @@
                 <div id="all-payments-list"></div>
             </div>
         </div>
+
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content hidden">
+            <div class="card">
+                <h2>🕐 Geçmiş Ödemeler</h2>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Tamamlanan ve silinen ödemeler</p>
+                
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #2e7d32; font-size: 16px; margin-bottom: 15px;">✅ Tamamlanan Ödemeler</h3>
+                    <div id="completed-payments-list"></div>
+                </div>
+
+                <div>
+                    <h3 style="color: #dc3545; font-size: 16px; margin-bottom: 15px;">🗑️ Silinen Ödemeler</h3>
+                    <div id="deleted-payments-list"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -448,6 +508,7 @@
 
                 renderDashboard();
                 renderAllPayments();
+                renderHistory();
             } catch (error) {
                 console.error('Ödemeler yüklenirken hata:', error);
                 alert('Ödemeler yüklenemedi!');
@@ -480,6 +541,10 @@
                 document.querySelector('.tab:nth-child(3)').classList.add('active');
                 document.getElementById('all-tab').classList.remove('hidden');
                 renderAllPayments();
+            } else if (tab === 'history') {
+                document.querySelector('.tab:nth-child(4)').classList.add('active');
+                document.getElementById('history-tab').classList.remove('hidden');
+                renderHistory();
             }
         }
 
@@ -654,7 +719,7 @@
                 upcoming: []
             };
             
-            payments.filter(p => !p.isPaid).forEach(payment => {
+            payments.filter(p => !p.isPaid && !p.isDeleted).forEach(payment => {
                 const dueDate = new Date(payment.dueDate);
                 dueDate.setHours(0, 0, 0, 0);
                 
@@ -719,10 +784,12 @@
 
         function renderAllPayments() {
             const container = document.getElementById('all-payments-list');
-            const allPayments = [...payments].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const allPayments = [...payments]
+                .filter(p => !p.isPaid && !p.isDeleted)
+                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
             
             if (allPayments.length === 0) {
-                container.innerHTML = '<div class="empty-state">Henüz ödeme eklenmemiş</div>';
+                container.innerHTML = '<div class="empty-state">Aktif ödeme bulunmuyor</div>';
             } else {
                 container.innerHTML = allPayments.map(payment => {
                     const today = new Date();
@@ -780,7 +847,8 @@
                 try {
                     const { doc, updateDoc } = window.firebaseModules;
                     await updateDoc(doc(window.firebaseDb, 'payments', firestoreId), {
-                        isPaid: true
+                        isPaid: true,
+                        paidAt: new Date().toISOString()
                     });
                     await loadPayments();
                 } catch (error) {
@@ -793,8 +861,11 @@
         async function deletePayment(firestoreId) {
             if (confirm('Bu ödeme kaydı silinsin mi?')) {
                 try {
-                    const { doc, deleteDoc } = window.firebaseModules;
-                    await deleteDoc(doc(window.firebaseDb, 'payments', firestoreId));
+                    const { doc, updateDoc } = window.firebaseModules;
+                    await updateDoc(doc(window.firebaseDb, 'payments', firestoreId), {
+                        isDeleted: true,
+                        deletedAt: new Date().toISOString()
+                    });
                     await loadPayments();
                 } catch (error) {
                     console.error('Silme hatası:', error);
@@ -807,6 +878,65 @@
             const date = new Date(dateString);
             const options = { day: 'numeric', month: 'long', year: 'numeric' };
             return date.toLocaleDateString('tr-TR', options);
+        }
+
+        function renderHistory() {
+            const completedContainer = document.getElementById('completed-payments-list');
+            const deletedContainer = document.getElementById('deleted-payments-list');
+
+            // Tamamlanan ödemeler
+            const completedPayments = payments.filter(p => p.isPaid && !p.isDeleted)
+                .sort((a, b) => new Date(b.paidAt || b.createdAt) - new Date(a.paidAt || a.createdAt));
+
+            if (completedPayments.length === 0) {
+                completedContainer.innerHTML = '<div class="empty-state">Henüz tamamlanmış ödeme yok</div>';
+            } else {
+                completedContainer.innerHTML = completedPayments.map(payment => `
+                    <div class="payment-card" style="border-left: 4px solid #2e7d32;">
+                        <div class="payment-header">
+                            <div>
+                                <div class="payment-customer">👤 ${payment.customerName}</div>
+                                <div class="payment-phone">📱 ${payment.customerPhone}</div>
+                            </div>
+                            <div class="payment-amount">₺${payment.amount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div class="payment-body">
+                            <div class="payment-info">
+                                <span>📅 Vade: ${formatDate(payment.dueDate)}</span>
+                                <span style="color: #2e7d32; font-weight: 600;">✅ Ödendi: ${payment.paidAt ? formatDate(payment.paidAt) : 'Tarih yok'}</span>
+                            </div>
+                            ${payment.note ? `<div class="payment-note">📝 ${payment.note}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Silinen ödemeler
+            const deletedPayments = payments.filter(p => p.isDeleted)
+                .sort((a, b) => new Date(b.deletedAt || b.createdAt) - new Date(a.deletedAt || a.createdAt));
+
+            if (deletedPayments.length === 0) {
+                deletedContainer.innerHTML = '<div class="empty-state">Silinmiş ödeme yok</div>';
+            } else {
+                deletedContainer.innerHTML = deletedPayments.map(payment => `
+                    <div class="payment-card" style="border-left: 4px solid #dc3545; opacity: 0.7;">
+                        <div class="payment-header">
+                            <div>
+                                <div class="payment-customer">👤 ${payment.customerName}</div>
+                                <div class="payment-phone">📱 ${payment.customerPhone}</div>
+                            </div>
+                            <div class="payment-amount">₺${payment.amount.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div class="payment-body">
+                            <div class="payment-info">
+                                <span>📅 Vade: ${formatDate(payment.dueDate)}</span>
+                                <span style="color: #dc3545; font-weight: 600;">🗑️ Silindi: ${payment.deletedAt ? formatDate(payment.deletedAt) : 'Tarih yok'}</span>
+                            </div>
+                            ${payment.note ? `<div class="payment-note">📝 ${payment.note}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
         function sendWhatsApp(phone, customerName, amount, dueDate) {
@@ -876,6 +1006,23 @@ Atlaspet Pet Ürünleri`;
             document.body.removeChild(link);
             
             alert(`✅ ${payments.length} ödeme Excel'e aktarıldı!\nDosya adı: ${filename}`);
+        }
+
+        // PWA Service Worker - Inline
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'vade-takip-v1';
+                const urlsToCache = ['/', '/index.html', '/dashboard.html'];
+                self.addEventListener('install', e => {
+                    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+                });
+                self.addEventListener('fetch', e => {
+                    e.respondWith(caches.match(e.request).then(response => response || fetch(e.request)));
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl);
         }
     </script>
 </body>
