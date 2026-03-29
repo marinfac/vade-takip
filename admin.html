@@ -690,7 +690,7 @@
             }
         }
 
-        // Yedek Al - Tüm Verileri JSON ve Excel Olarak
+        // Yedek Al - JSON ve CSV Olarak
         async function exportAllData() {
             if (!confirm('Tüm kullanıcılar ve ödemeler yedeklensin mi?')) return;
 
@@ -721,9 +721,10 @@
 
                 const timestamp = new Date().toISOString().split('T')[0];
 
-                // 1. JSON Yedek
+                // 1. JSON Yedek (TAM YEDEK)
                 const backup = {
                     exportDate: new Date().toISOString(),
+                    exportDateTR: new Date().toLocaleString('tr-TR'),
                     users: users,
                     payments: payments,
                     summary: {
@@ -732,7 +733,11 @@
                         activeUsers: users.filter(u => u.status === 'active').length,
                         pendingUsers: users.filter(u => u.status === 'pending').length,
                         paidPayments: payments.filter(p => p.isPaid).length,
-                        deletedPayments: payments.filter(p => p.isDeleted).length
+                        activePayments: payments.filter(p => !p.isPaid && !p.isDeleted).length,
+                        deletedPayments: payments.filter(p => p.isDeleted).length,
+                        totalAmount: payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+                        paidAmount: payments.filter(p => p.isPaid).reduce((sum, p) => sum + (p.amount || 0), 0),
+                        pendingAmount: payments.filter(p => !p.isPaid && !p.isDeleted).reduce((sum, p) => sum + (p.amount || 0), 0)
                     }
                 };
 
@@ -740,99 +745,71 @@
                 const jsonUrl = URL.createObjectURL(jsonBlob);
                 const jsonLink = document.createElement('a');
                 jsonLink.href = jsonUrl;
-                jsonLink.download = `vade-takip-yedek-${timestamp}.json`;
+                jsonLink.download = `vade-takip-YEDEK-${timestamp}.json`;
                 jsonLink.click();
+                URL.revokeObjectURL(jsonUrl);
 
-                // 2. Excel (XLSX) - SheetJS kullanarak
-                // SheetJS CDN'den yükle
-                if (!window.XLSX) {
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
-                    await new Promise((resolve) => {
-                        script.onload = resolve;
-                        document.head.appendChild(script);
-                    });
-                }
-
-                // Workbook oluştur
-                const wb = window.XLSX.utils.book_new();
-
-                // Kullanıcılar sayfası
-                const usersData = [
-                    ['KULLANICILAR - Atlaspet Vade Takip Sistemi'],
-                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
-                    [],
-                    ['ID', 'Ad Soyad', 'E-posta', 'Durum', 'Kayıt Tarihi']
-                ];
+                // 2. CSV Excel Formatı (TELEFON İÇİN)
+                let csvContent = '\uFEFF'; // UTF-8 BOM
+                
+                // ÖZET
+                csvContent += 'ATLASPET VADE TAKİP SİSTEMİ - YEDEK RAPOR\n';
+                csvContent += `Yedek Tarihi,${new Date().toLocaleString('tr-TR')}\n`;
+                csvContent += '\n';
+                csvContent += 'ÖZET BİLGİLER\n';
+                csvContent += `Toplam Kullanıcı,${users.length}\n`;
+                csvContent += `Aktif Kullanıcı,${users.filter(u => u.status === 'active').length}\n`;
+                csvContent += `Onay Bekleyen,${users.filter(u => u.status === 'pending').length}\n`;
+                csvContent += `Toplam Ödeme,${payments.length}\n`;
+                csvContent += `Aktif Ödeme,${payments.filter(p => !p.isPaid && !p.isDeleted).length}\n`;
+                csvContent += `Ödenen,${payments.filter(p => p.isPaid).length}\n`;
+                csvContent += `Silinen,${payments.filter(p => p.isDeleted).length}\n`;
+                csvContent += `Toplam Tutar,"${backup.summary.totalAmount.toLocaleString('tr-TR')} ₺"\n`;
+                csvContent += `Ödenen Tutar,"${backup.summary.paidAmount.toLocaleString('tr-TR')} ₺"\n`;
+                csvContent += `Bekleyen Tutar,"${backup.summary.pendingAmount.toLocaleString('tr-TR')} ₺"\n`;
+                csvContent += '\n\n';
+                
+                // KULLANICILAR
+                csvContent += 'KULLANICILAR\n';
+                csvContent += 'ID,Ad Soyad,E-posta,Durum,Kayıt Tarihi\n';
                 users.forEach(user => {
-                    usersData.push([
-                        user.id,
-                        user.name || '',
-                        user.email,
-                        user.status === 'active' ? 'Aktif' : 
-                        user.status === 'pending' ? 'Bekliyor' :
-                        user.status === 'disabled' ? 'Pasif' : 'Silinmiş',
-                        user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : ''
-                    ]);
+                    const status = user.status === 'active' ? 'Aktif' : 
+                                 user.status === 'pending' ? 'Bekliyor' :
+                                 user.status === 'disabled' ? 'Pasif' : 'Silinmiş';
+                    const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : '';
+                    csvContent += `${user.id},"${user.name || ''}","${user.email}",${status},${createdAt}\n`;
                 });
-                const usersSheet = window.XLSX.utils.aoa_to_sheet(usersData);
-                window.XLSX.utils.book_append_sheet(wb, usersSheet, 'Kullanıcılar');
-
-                // Ödemeler sayfası
-                const paymentsData = [
-                    ['ÖDEMELER - Atlaspet Vade Takip Sistemi'],
-                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
-                    [],
-                    ['Müşteri Adı', 'Telefon', 'Tutar (₺)', 'Vade Tarihi', 'Durum', 'Not']
-                ];
+                
+                csvContent += '\n\n';
+                
+                // ÖDEMELER
+                csvContent += 'ÖDEMELER\n';
+                csvContent += 'Müşteri Adı,Telefon,Tutar (₺),Vade Tarihi,Durum,Ödeme Tarihi,Silinme Tarihi,Not\n';
                 payments.forEach(payment => {
                     const status = payment.isPaid ? 'Ödendi' : 
                                  payment.isDeleted ? 'Silindi' : 'Aktif';
-                    paymentsData.push([
-                        payment.customerName || '',
-                        payment.customerPhone || '',
-                        payment.amount || 0,
-                        payment.dueDate ? new Date(payment.dueDate).toLocaleDateString('tr-TR') : '',
-                        status,
-                        payment.note || ''
-                    ]);
+                    const dueDate = payment.dueDate ? new Date(payment.dueDate).toLocaleDateString('tr-TR') : '';
+                    const paidAt = payment.paidAt ? new Date(payment.paidAt).toLocaleDateString('tr-TR') : '';
+                    const deletedAt = payment.deletedAt ? new Date(payment.deletedAt).toLocaleDateString('tr-TR') : '';
+                    const amount = (payment.amount || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2});
+                    const note = (payment.note || '').replace(/"/g, '""');
+                    csvContent += `"${payment.customerName || ''}","${payment.customerPhone || ''}","${amount}",${dueDate},${status},${paidAt},${deletedAt},"${note}"\n`;
                 });
-                const paymentsSheet = window.XLSX.utils.aoa_to_sheet(paymentsData);
-                window.XLSX.utils.book_append_sheet(wb, paymentsSheet, 'Ödemeler');
 
-                // Özet sayfası
-                const summaryData = [
-                    ['ÖZET RAPOR'],
-                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
-                    [],
-                    ['KULLANICILAR'],
-                    ['Toplam Kullanıcı', users.length],
-                    ['Aktif Kullanıcı', users.filter(u => u.status === 'active').length],
-                    ['Onay Bekleyen', users.filter(u => u.status === 'pending').length],
-                    ['Pasif Kullanıcı', users.filter(u => u.status === 'disabled').length],
-                    [],
-                    ['ÖDEMELER'],
-                    ['Toplam Ödeme', payments.length],
-                    ['Aktif Ödeme', payments.filter(p => !p.isPaid && !p.isDeleted).length],
-                    ['Ödenen', payments.filter(p => p.isPaid).length],
-                    ['Silinen', payments.filter(p => p.isDeleted).length],
-                    [],
-                    ['TOPLAM TUTARLAR'],
-                    ['Tüm Ödemeler', payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺'],
-                    ['Ödenen Toplam', payments.filter(p => p.isPaid).reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺'],
-                    ['Bekleyen Toplam', payments.filter(p => !p.isPaid && !p.isDeleted).reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺']
-                ];
-                const summarySheet = window.XLSX.utils.aoa_to_sheet(summaryData);
-                window.XLSX.utils.book_append_sheet(wb, summarySheet, 'Özet');
+                // CSV dosyasını indir
+                const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const csvUrl = URL.createObjectURL(csvBlob);
+                const csvLink = document.createElement('a');
+                csvLink.href = csvUrl;
+                csvLink.download = `vade-takip-EXCEL-${timestamp}.csv`;
+                csvLink.click();
+                URL.revokeObjectURL(csvUrl);
 
-                // Excel dosyasını indir
-                window.XLSX.writeFile(wb, `vade-takip-yedek-${timestamp}.xlsx`);
-
-                alert(`✅ Yedek alındı!\n\n📊 Özet:\n- ${users.length} kullanıcı\n- ${payments.length} ödeme\n\n2 dosya indirildi:\n1. JSON (tam yedek)\n2. XLSX (Excel dosyası)\n\n📱 Excel dosyasını telefonunda açabilirsin!`);
+                alert(`✅ Yedek alındı!\n\n📊 Özet:\n- ${users.length} kullanıcı\n- ${payments.length} ödeme\n- ${backup.summary.totalAmount.toLocaleString('tr-TR')} ₺ toplam\n\n2 dosya indirildi:\n1. JSON (tam yedek)\n2. CSV (Excel/Telefon için)\n\n📱 CSV dosyasını Excel veya Google Sheets ile açabilirsin!`);
                 
             } catch (error) {
                 console.error('Yedekleme hatası:', error);
-                alert('Yedekleme başarısız: ' + error.message);
+                alert('Yedekleme başarısız: ' + error.message + '\n\nFirestore kurallarını kontrol et!');
             }
         }
 
