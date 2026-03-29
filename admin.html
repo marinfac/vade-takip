@@ -586,6 +586,7 @@
                                             `<button class="btn-sm btn-warning" onclick="disableUser('${user.id}')">🚫 Pasifleştir</button>` :
                                             `<button class="btn-sm btn-success" onclick="enableUser('${user.id}')">✅ Aktifleştir</button>`
                                         }
+                                        <button class="btn-sm" style="background: #ff9800;" onclick="changePassword('${user.email}', '${user.name}')">🔑 Şifre Değiştir</button>
                                         <button class="btn-sm btn-danger" onclick="deleteUser('${user.id}', '${user.email}')">🗑️ Sil</button>
                                     </div>
                                 </td>
@@ -654,6 +655,48 @@
             } catch (error) {
                 console.error('Aktifleştirme hatası:', error);
                 alert('Kullanıcı aktifleştirilemedi!');
+            }
+        }
+
+        // Şifre Değiştir (Manuel)
+        async function changePassword(email, userName) {
+            const newPassword = prompt(`${userName} (${email}) için yeni şifre belirleyin:\n\nMinimum 6 karakter olmalıdır.`);
+            
+            if (!newPassword) return;
+            
+            if (newPassword.length < 6) {
+                alert('❌ Şifre en az 6 karakter olmalıdır!');
+                return;
+            }
+
+            if (!confirm(`Yeni Şifre: ${newPassword}\n\nBu şifreyi ${email} için kaydetmek istediğinize emin misiniz?\n\n⚠️ Bu şifreyi kullanıcıya bildirmeyi unutmayın!`)) return;
+
+            try {
+                // NOT: Firebase Client SDK ile başka kullanıcının şifresini değiştiremezsin!
+                // Çözüm: Şifre sıfırlama linki gönder + kullanıcıya manuel bildir
+                
+                const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                
+                // Şifre sıfırlama e-postası gönder
+                await sendPasswordResetEmail(window.firebaseAuth, email);
+                
+                // Şifreyi göster ve kopyalama seçeneği sun
+                const message = `✅ Şifre sıfırlama e-postası gönderildi!\n\n📧 E-posta: ${email}\n🔑 Yeni Şifre: ${newPassword}\n\n⚠️ ÖNEMLİ:\n1. Kullanıcı e-postasındaki linke tıklayacak\n2. Yeni şifre olarak "${newPassword}" girecek\n3. Bu şifreyi kullanıcıya WhatsApp/SMS ile bildir!\n\n💡 Şifreyi kopyalamak için Ctrl+C yapabilirsiniz.`;
+                
+                // Şifreyi panoya kopyala
+                navigator.clipboard.writeText(newPassword).then(() => {
+                    alert(message + '\n\n✅ Şifre panoya kopyalandı!');
+                }).catch(() => {
+                    alert(message);
+                });
+                
+            } catch (error) {
+                console.error('Şifre değiştirme hatası:', error);
+                if (error.code === 'auth/user-not-found') {
+                    alert('❌ Bu e-posta adresi sistemde bulunamadı!');
+                } else {
+                    alert('Şifre değiştirme başarısız: ' + error.message);
+                }
             }
         }
 
