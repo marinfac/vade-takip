@@ -366,6 +366,7 @@
         <div class="header">
             <h1>👨‍💼 Admin Panel</h1>
             <div class="header-right">
+                <button class="btn-logout" style="background: #2e7d32; margin-right: 10px;" onclick="exportAllData()">💾 Yedek Al</button>
                 <button class="btn-logout" onclick="handleLogout()">🚪 Çıkış</button>
             </div>
         </div>
@@ -686,6 +687,152 @@
             } catch (error) {
                 console.error('Silme hatası:', error);
                 alert('Kullanıcı silinemedi: ' + error.message);
+            }
+        }
+
+        // Yedek Al - Tüm Verileri JSON ve Excel Olarak
+        async function exportAllData() {
+            if (!confirm('Tüm kullanıcılar ve ödemeler yedeklensin mi?')) return;
+
+            try {
+                await waitForFirebase();
+                
+                const { collection, getDocs } = window.firebaseModules;
+                
+                // Kullanıcıları al
+                const usersSnapshot = await getDocs(collection(window.firebaseDb, 'users'));
+                const users = [];
+                usersSnapshot.forEach((doc) => {
+                    users.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                // Ödemeleri al
+                const paymentsSnapshot = await getDocs(collection(window.firebaseDb, 'payments'));
+                const payments = [];
+                paymentsSnapshot.forEach((doc) => {
+                    payments.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                const timestamp = new Date().toISOString().split('T')[0];
+
+                // 1. JSON Yedek
+                const backup = {
+                    exportDate: new Date().toISOString(),
+                    users: users,
+                    payments: payments,
+                    summary: {
+                        totalUsers: users.length,
+                        totalPayments: payments.length,
+                        activeUsers: users.filter(u => u.status === 'active').length,
+                        pendingUsers: users.filter(u => u.status === 'pending').length,
+                        paidPayments: payments.filter(p => p.isPaid).length,
+                        deletedPayments: payments.filter(p => p.isDeleted).length
+                    }
+                };
+
+                const jsonBlob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                const jsonLink = document.createElement('a');
+                jsonLink.href = jsonUrl;
+                jsonLink.download = `vade-takip-yedek-${timestamp}.json`;
+                jsonLink.click();
+
+                // 2. Excel (XLSX) - SheetJS kullanarak
+                // SheetJS CDN'den yükle
+                if (!window.XLSX) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                    await new Promise((resolve) => {
+                        script.onload = resolve;
+                        document.head.appendChild(script);
+                    });
+                }
+
+                // Workbook oluştur
+                const wb = window.XLSX.utils.book_new();
+
+                // Kullanıcılar sayfası
+                const usersData = [
+                    ['KULLANICILAR - Atlaspet Vade Takip Sistemi'],
+                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
+                    [],
+                    ['ID', 'Ad Soyad', 'E-posta', 'Durum', 'Kayıt Tarihi']
+                ];
+                users.forEach(user => {
+                    usersData.push([
+                        user.id,
+                        user.name || '',
+                        user.email,
+                        user.status === 'active' ? 'Aktif' : 
+                        user.status === 'pending' ? 'Bekliyor' :
+                        user.status === 'disabled' ? 'Pasif' : 'Silinmiş',
+                        user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : ''
+                    ]);
+                });
+                const usersSheet = window.XLSX.utils.aoa_to_sheet(usersData);
+                window.XLSX.utils.book_append_sheet(wb, usersSheet, 'Kullanıcılar');
+
+                // Ödemeler sayfası
+                const paymentsData = [
+                    ['ÖDEMELER - Atlaspet Vade Takip Sistemi'],
+                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
+                    [],
+                    ['Müşteri Adı', 'Telefon', 'Tutar (₺)', 'Vade Tarihi', 'Durum', 'Not']
+                ];
+                payments.forEach(payment => {
+                    const status = payment.isPaid ? 'Ödendi' : 
+                                 payment.isDeleted ? 'Silindi' : 'Aktif';
+                    paymentsData.push([
+                        payment.customerName || '',
+                        payment.customerPhone || '',
+                        payment.amount || 0,
+                        payment.dueDate ? new Date(payment.dueDate).toLocaleDateString('tr-TR') : '',
+                        status,
+                        payment.note || ''
+                    ]);
+                });
+                const paymentsSheet = window.XLSX.utils.aoa_to_sheet(paymentsData);
+                window.XLSX.utils.book_append_sheet(wb, paymentsSheet, 'Ödemeler');
+
+                // Özet sayfası
+                const summaryData = [
+                    ['ÖZET RAPOR'],
+                    ['Yedek Tarihi:', new Date().toLocaleString('tr-TR')],
+                    [],
+                    ['KULLANICILAR'],
+                    ['Toplam Kullanıcı', users.length],
+                    ['Aktif Kullanıcı', users.filter(u => u.status === 'active').length],
+                    ['Onay Bekleyen', users.filter(u => u.status === 'pending').length],
+                    ['Pasif Kullanıcı', users.filter(u => u.status === 'disabled').length],
+                    [],
+                    ['ÖDEMELER'],
+                    ['Toplam Ödeme', payments.length],
+                    ['Aktif Ödeme', payments.filter(p => !p.isPaid && !p.isDeleted).length],
+                    ['Ödenen', payments.filter(p => p.isPaid).length],
+                    ['Silinen', payments.filter(p => p.isDeleted).length],
+                    [],
+                    ['TOPLAM TUTARLAR'],
+                    ['Tüm Ödemeler', payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺'],
+                    ['Ödenen Toplam', payments.filter(p => p.isPaid).reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺'],
+                    ['Bekleyen Toplam', payments.filter(p => !p.isPaid && !p.isDeleted).reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('tr-TR') + ' ₺']
+                ];
+                const summarySheet = window.XLSX.utils.aoa_to_sheet(summaryData);
+                window.XLSX.utils.book_append_sheet(wb, summarySheet, 'Özet');
+
+                // Excel dosyasını indir
+                window.XLSX.writeFile(wb, `vade-takip-yedek-${timestamp}.xlsx`);
+
+                alert(`✅ Yedek alındı!\n\n📊 Özet:\n- ${users.length} kullanıcı\n- ${payments.length} ödeme\n\n2 dosya indirildi:\n1. JSON (tam yedek)\n2. XLSX (Excel dosyası)\n\n📱 Excel dosyasını telefonunda açabilirsin!`);
+                
+            } catch (error) {
+                console.error('Yedekleme hatası:', error);
+                alert('Yedekleme başarısız: ' + error.message);
             }
         }
 
