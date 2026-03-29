@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vade Takip Admin">
+    <meta name="theme-color" content="#1b5e20">
+    <title>Vade Takip - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            color: #1b5e20;
+            font-size: clamp(24px, 5vw, 32px);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-box p {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1b5e20;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1b5e20 0%, #0d3d10 100%);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Admin Panel */
+        .hidden {
+            display: none;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            color: #1b5e20;
+            font-size: clamp(20px, 4vw, 28px);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-logout {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
+
+        .btn-logout:active {
+            transform: scale(0.98);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: clamp(18px, 4vw, 22px);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card p {
+            color: #2e7d32;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .user-table thead {
+            background: #f8f9fa;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-table th {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .user-table td {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .user-table tbody {
+            display: table;
+            width: 100%;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-disabled {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f57c00;
+            color: white;
+        }
+
+        .btn-sm:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .add-user-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1b5e20;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .user-table {
+                font-size: 12px;
+            }
+
+            .user-table th,
+            .user-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <h1>🔐 Admin Panel</h1>
+            <p>Vade Takip Sistemi Yönetimi</p>
+
+            <div class="error-message" id="error-message"></div>
+
+            <div class="form-group">
+                <label>Kullanıcı Adı</label>
+                <input type="text" id="admin-username" placeholder="admin" autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label>Şifre</label>
+                <input type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+
+            <button class="btn btn-primary" onclick="handleAdminLogin()">🔓 Giriş Yap</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="container hidden">
+        <div class="header">
+            <h1>👨‍💼 Admin Panel</h1>
+            <div class="header-right">
+                <button class="btn-logout" onclick="handleLogout()">🚪 Çıkış</button>
+            </div>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Toplam Kullanıcı</h3>
+                <p id="total-users">0</p>
+            </div>
+            <div class="stat-card" style="border-left-color: #f57c00;">
+                <h3>Onay Bekleyen</h3>
+                <p id="pending-users" style="color: #f57c00;">0</p>
+            </div>
+            <div class="stat-card" style="border-left-color: #2e7d32;">
+                <h3>Aktif Kullanıcı</h3>
+                <p id="active-users" style="color: #2e7d32;">0</p>
+            </div>
+        </div>
+
+        <!-- Yeni Kullanıcı Ekle -->
+        <div class="card">
+            <h2>➕ Yeni Kullanıcı Ekle</h2>
+            <div class="add-user-form">
+                <div class="form-group">
+                    <label>Ad Soyad</label>
+                    <input type="text" id="new-user-name" placeholder="Ali Demir">
+                </div>
+                <div class="form-group">
+                    <label>E-posta</label>
+                    <input type="email" id="new-user-email" placeholder="ornek@atlaspet.com">
+                </div>
+                <div class="form-group">
+                    <label>Şifre (En az 6 karakter)</label>
+                    <input type="password" id="new-user-password" placeholder="••••••••">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 15px; max-width: 300px;" onclick="addNewUser()">✅ Kullanıcı Ekle</button>
+        </div>
+
+        <!-- Kullanıcı Listesi -->
+        <div class="card">
+            <h2>👥 Kullanıcı Yönetimi</h2>
+            <div id="loading" class="spinner hidden"></div>
+            <div id="users-container"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYPR95I6kne2Hlm4fvq14SRTJnnBR9PY8",
+            authDomain: "vade-takip-atlaspet.firebaseapp.com",
+            projectId: "vade-takip-atlaspet",
+            storageBucket: "vade-takip-atlaspet.firebasestorage.app",
+            messagingSenderId: "779701135013",
+            appId: "1:779701135013:web:cd114d61d1a90c227e0f4c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global olarak erişilebilir yap
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseModules = {
+            collection, 
+            getDocs, 
+            doc, 
+            updateDoc, 
+            deleteDoc, 
+            setDoc,
+            query,
+            where,
+            createUserWithEmailAndPassword, 
+            updateProfile
+        };
+
+        console.log('Firebase initialized successfully');
+    </script>
+
+    <script>
+        let allUsers = [];
+
+        // Firebase'in yüklenmesini bekle
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                if (window.firebaseModules && window.firebaseDb) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.firebaseModules && window.firebaseDb) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
+        // Admin Login
+        function handleAdminLogin() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value;
+
+            if (username === 'admin' && password === '151294Ali.') {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                showAdminPanel();
+            } else {
+                showError('Kullanıcı adı veya şifre hatalı!');
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => errorEl.style.display = 'none', 3000);
+        }
+
+        function showAdminPanel() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            loadUsers();
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        // Kullanıcıları Yükle
+        async function loadUsers() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('users-container');
+            
+            loading.classList.remove('hidden');
+            
+            try {
+                // Firebase'in yüklenmesini bekle
+                await waitForFirebase();
+                
+                const { collection, getDocs } = window.firebaseModules;
+                const usersSnapshot = await getDocs(collection(window.firebaseDb, 'users'));
+                
+                allUsers = [];
+                usersSnapshot.forEach((doc) => {
+                    allUsers.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                renderUsers();
+                updateStats();
+            } catch (error) {
+                console.error('Kullanıcılar yüklenirken hata:', error);
+                alert('Kullanıcılar yüklenemedi: ' + error.message);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function renderUsers() {
+            const container = document.getElementById('users-container');
+
+            if (allUsers.length === 0) {
+                container.innerHTML = '<div class="empty-state">Henüz kullanıcı yok</div>';
+                return;
+            }
+
+            const sortedUsers = [...allUsers].sort((a, b) => {
+                if (a.status === 'pending' && b.status !== 'pending') return -1;
+                if (a.status !== 'pending' && b.status === 'pending') return 1;
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+
+            container.innerHTML = `
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Durum</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedUsers.map(user => `
+                            <tr>
+                                <td><strong>${user.name || 'İsimsiz'}</strong></td>
+                                <td>${user.email}</td>
+                                <td>
+                                    <span class="status-badge status-${user.status || 'active'}">
+                                        ${user.status === 'pending' ? '⏳ Bekliyor' : 
+                                          user.status === 'disabled' ? '🚫 Pasif' : '✅ Aktif'}
+                                    </span>
+                                </td>
+                                <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : '-'}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        ${user.status === 'pending' ? 
+                                            `<button class="btn-sm btn-success" onclick="approveUser('${user.id}', '${user.email}')">✅ Onayla</button>` : 
+                                            user.status === 'active' ? 
+                                            `<button class="btn-sm btn-warning" onclick="disableUser('${user.id}')">🚫 Pasifleştir</button>` :
+                                            `<button class="btn-sm btn-success" onclick="enableUser('${user.id}')">✅ Aktifleştir</button>`
+                                        }
+                                        <button class="btn-sm btn-danger" onclick="deleteUser('${user.id}', '${user.email}')">🗑️ Sil</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function updateStats() {
+            document.getElementById('total-users').textContent = allUsers.length;
+            document.getElementById('pending-users').textContent = allUsers.filter(u => u.status === 'pending').length;
+            document.getElementById('active-users').textContent = allUsers.filter(u => u.status === 'active').length;
+        }
+
+        // Kullanıcı Onayla
+        async function approveUser(userId, email) {
+            if (!confirm(`${email} kullanıcısını onaylıyor musunuz?`)) return;
+
+            try {
+                const { doc, updateDoc } = window.firebaseModules;
+                await updateDoc(doc(window.firebaseDb, 'users', userId), {
+                    status: 'active',
+                    approvedAt: new Date().toISOString()
+                });
+                
+                alert('✅ Kullanıcı onaylandı!');
+                await loadUsers();
+            } catch (error) {
+                console.error('Onaylama hatası:', error);
+                alert('Kullanıcı onaylanamadı!');
+            }
+        }
+
+        // Kullanıcı Pasifleştir
+        async function disableUser(userId) {
+            if (!confirm('Bu kullanıcıyı pasifleştirmek istediğinize emin misiniz?')) return;
+
+            try {
+                const { doc, updateDoc } = window.firebaseModules;
+                await updateDoc(doc(window.firebaseDb, 'users', userId), {
+                    status: 'disabled'
+                });
+                
+                alert('✅ Kullanıcı pasifleştirildi!');
+                await loadUsers();
+            } catch (error) {
+                console.error('Pasifleştirme hatası:', error);
+                alert('Kullanıcı pasifleştirilemedi!');
+            }
+        }
+
+        // Kullanıcı Aktifleştir
+        async function enableUser(userId) {
+            if (!confirm('Bu kullanıcıyı aktifleştirmek istediğinize emin misiniz?')) return;
+
+            try {
+                const { doc, updateDoc } = window.firebaseModules;
+                await updateDoc(doc(window.firebaseDb, 'users', userId), {
+                    status: 'active'
+                });
+                
+                alert('✅ Kullanıcı aktifleştirildi!');
+                await loadUsers();
+            } catch (error) {
+                console.error('Aktifleştirme hatası:', error);
+                alert('Kullanıcı aktifleştirilemedi!');
+            }
+        }
+
+        // Kullanıcı Sil
+        async function deleteUser(userId, email) {
+            if (!confirm(`${email} kullanıcısını kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) return;
+
+            try {
+                const { doc, deleteDoc, collection, query, where, getDocs } = window.firebaseModules;
+                
+                // Kullanıcının ödemelerini sil
+                const paymentsQuery = query(
+                    collection(window.firebaseDb, 'payments'),
+                    where('userId', '==', userId)
+                );
+                const paymentsSnapshot = await getDocs(paymentsQuery);
+                
+                for (const paymentDoc of paymentsSnapshot.docs) {
+                    await deleteDoc(doc(window.firebaseDb, 'payments', paymentDoc.id));
+                }
+
+                // Kullanıcıyı sil
+                await deleteDoc(doc(window.firebaseDb, 'users', userId));
+                
+                alert('✅ Kullanıcı ve tüm ödemeleri silindi!');
+                await loadUsers();
+            } catch (error) {
+                console.error('Silme hatası:', error);
+                alert('Kullanıcı silinemedi!');
+            }
+        }
+
+        // Yeni Kullanıcı Ekle
+        async function addNewUser() {
+            const name = document.getElementById('new-user-name').value.trim();
+            const email = document.getElementById('new-user-email').value.trim();
+            const password = document.getElementById('new-user-password').value;
+
+            if (!name || !email || !password) {
+                alert('Lütfen tüm alanları doldurun!');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Şifre en az 6 karakter olmalıdır!');
+                return;
+            }
+
+            try {
+                const { createUserWithEmailAndPassword, updateProfile, setDoc, doc } = window.firebaseModules;
+                
+                // Firebase Auth'a kullanıcı ekle
+                const userCredential = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+                
+                // Profil güncelle
+                await updateProfile(userCredential.user, {
+                    displayName: name
+                });
+
+                // Firestore'a kullanıcı ekle
+                await setDoc(doc(window.firebaseDb, 'users', userCredential.user.uid), {
+                    name: name,
+                    email: email,
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    createdBy: 'admin'
+                });
+
+                alert('✅ Kullanıcı başarıyla eklendi!');
+                
+                // Formu temizle
+                document.getElementById('new-user-name').value = '';
+                document.getElementById('new-user-email').value = '';
+                document.getElementById('new-user-password').value = '';
+                
+                await loadUsers();
+            } catch (error) {
+                console.error('Kullanıcı ekleme hatası:', error);
+                let errorMessage = 'Kullanıcı eklenemedi!';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Bu e-posta adresi zaten kullanımda!';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Geçersiz e-posta adresi!';
+                }
+                
+                alert(errorMessage);
+            }
+        }
+
+        // Sayfa yüklendiğinde
+        window.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            if (isLoggedIn === 'true') {
+                showAdminPanel();
+            }
+
+            // Enter tuşu ile giriş
+            document.getElementById('admin-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleAdminLogin();
+            });
+        });
+    </script>
+</body>
+</html>
