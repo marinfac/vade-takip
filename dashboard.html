@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
+    <title>Vade Takip Sistemi - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: #2e7d32;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .user-info {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.4);
+        }
+
+        .payment-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payment-item.today {
+            border-color: #dc3545;
+            background: #ffe5e5;
+        }
+
+        .payment-item.tomorrow {
+            border-color: #fd7e14;
+            background: #fff3e0;
+        }
+
+        .payment-item.two-days {
+            border-color: #ffc107;
+            background: #fffbec;
+        }
+
+        .payment-item.three-days {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-info strong {
+            display: block;
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .payment-info small {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .payment-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .notification-count {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="initial-loading">⏳ Yükleniyor...</div>
+    
+    <div class="container hidden" id="main-app">
+        <div class="header">
+            <div class="header-left">
+                <h1>💰 Vade Takip Sistemi</h1>
+                <p>Atlaspet Pet Ürünleri</p>
+            </div>
+            <div class="header-right">
+                <div class="user-info" id="user-display"></div>
+                <button class="btn-logout" onclick="handleLogout()">🚪 Çıkış</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="showTab('add')">➕ Ödeme Ekle</button>
+            <button class="tab" onclick="showTab('all')">📋 Tüm Ödemeler</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content">
+            <div class="card">
+                <h2>🔴 Bugün Vadesi Gelenler <span id="today-count" class="notification-count hidden">0</span></h2>
+                <div id="today-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>🟠 Yarın Vadesi Gelenler <span id="tomorrow-count" class="notification-count hidden">0</span></h2>
+                <div id="tomorrow-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>🟡 2 Gün Sonra <span id="two-days-count" class="notification-count hidden">0</span></h2>
+                <div id="two-days-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>🟢 3 Gün Sonra <span id="three-days-count" class="notification-count hidden">0</span></h2>
+                <div id="three-days-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>📅 Yaklaşan Ödemeler (4-30 Gün) <span id="upcoming-count" class="notification-count hidden">0</span></h2>
+                <div id="upcoming-list"></div>
+            </div>
+        </div>
+
+        <!-- Add Payment Tab -->
+        <div id="add-tab" class="tab-content hidden">
+            <div class="card">
+                <h2>➕ Yeni Ödeme Ekle</h2>
+                <form id="payment-form">
+                    <div class="form-group">
+                        <label>Müşteri Adı</label>
+                        <input type="text" id="customer-name" placeholder="Örn: Ahmet Yılmaz" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Telefon Numarası</label>
+                        <input type="tel" id="customer-phone" placeholder="Örn: 5551234567" required>
+                        <small style="color: #666; margin-top: 5px; display: block;">WhatsApp mesajı göndermek için (5XX ile başlayın)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tutar (₺)</label>
+                        <input type="number" id="amount" placeholder="Örn: 15000" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vade Tipi</label>
+                        <select id="payment-type" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="14">14 Gün</option>
+                            <option value="30">30 Gün</option>
+                            <option value="45">45 Gün</option>
+                            <option value="senet">Senet (Özel Tarih)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group hidden" id="senet-dates">
+                        <label>Senet Bilgileri</label>
+                        <div id="senet-list"></div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="button" class="btn-sm btn-success" onclick="addSenet()" style="flex: 1;">➕ Senet Ekle</button>
+                            <button type="button" class="btn-sm btn-danger" onclick="removeSenet()" style="flex: 1;">➖ Senet Çıkar</button>
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; border: 2px solid #2e7d32;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: #1b5e20;">Toplam Tutar:</strong>
+                                <strong style="color: #1b5e20; font-size: 18px;" id="senet-total">₺0,00</strong>
+                            </div>
+                        </div>
+                        <small style="color: #666; margin-top: 10px; display: block;">İstediğiniz kadar senet ekleyebilir/çıkarabilirsiniz</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Not (Opsiyonel)</label>
+                        <textarea id="note" rows="3" placeholder="Ek bilgiler..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">💾 Ödeme Ekle</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- All Payments Tab -->
+        <div id="all-tab" class="tab-content hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;">📋 Tüm Ödemeler</h2>
+                    <button onclick="exportToExcel()" class="btn-sm" style="background: #2e7d32; color: white; padding: 10px 20px;">📥 Excel İndir</button>
+                </div>
+                <div id="all-payments-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase yapılandırması
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYPR95I6kne2Hlm4fvq14SRTJnnBR9PY8",
+            authDomain: "vade-takip-atlaspet.firebaseapp.com",
+            projectId: "vade-takip-atlaspet",
+            storageBucket: "vade-takip-atlaspet.firebasestorage.app",
+            messagingSenderId: "779701135013",
+            appId: "1:779701135013:web:cd114d61d1a90c227e0f4c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseModules = { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, Timestamp };
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('user-display').textContent = user.displayName || user.email;
+                document.getElementById('initial-loading').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                await loadPayments();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        window.currentUserId = () => currentUser?.uid;
+    </script>
+
+    <script>
+        let payments = [];
+        let senetCount = 1;
+
+        async function loadPayments() {
+            const userId = window.currentUserId();
+            if (!userId) return;
+
+            try {
+                const { collection, query, where, getDocs } = window.firebaseModules;
+                const q = query(
+                    collection(window.firebaseDb, 'payments'),
+                    where('userId', '==', userId)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                payments = [];
+                
+                querySnapshot.forEach((doc) => {
+                    payments.push({
+                        firestoreId: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                renderDashboard();
+                renderAllPayments();
+            } catch (error) {
+                console.error('Ödemeler yüklenirken hata:', error);
+                alert('Ödemeler yüklenemedi!');
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+                try {
+                    const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                    await signOut(window.firebaseAuth);
+                } catch (error) {
+                    console.error('Çıkış hatası:', error);
+                }
+            }
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            
+            if (tab === 'dashboard') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('dashboard-tab').classList.remove('hidden');
+                renderDashboard();
+            } else if (tab === 'add') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('add-tab').classList.remove('hidden');
+            } else if (tab === 'all') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('all-tab').classList.remove('hidden');
+                renderAllPayments();
+            }
+        }
+
+        // Senet fonksiyonları
+        function addSenet() {
+            senetCount++;
+            renderSenetList();
+        }
+
+        function removeSenet() {
+            if (senetCount > 1) {
+                senetCount--;
+                renderSenetList();
+            } else {
+                alert('En az 1 senet olmalıdır!');
+            }
+        }
+
+        function renderSenetList() {
+            const container = document.getElementById('senet-list');
+            const savedValues = {};
+            
+            for (let i = 1; i <= senetCount + 1; i++) {
+                const amountInput = document.getElementById(`senet-${i}-amount`);
+                const dateInput = document.getElementById(`senet-${i}-date`);
+                if (amountInput) savedValues[`amount-${i}`] = amountInput.value;
+                if (dateInput) savedValues[`date-${i}`] = dateInput.value;
+            }
+            
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= senetCount; i++) {
+                const senetDiv = document.createElement('div');
+                senetDiv.style.marginBottom = '15px';
+                senetDiv.style.padding = '15px';
+                senetDiv.style.background = '#f8f9fa';
+                senetDiv.style.borderRadius = '8px';
+                
+                senetDiv.innerHTML = `
+                    <div style="font-weight: 600; color: #2e7d32; margin-bottom: 8px;">${i}. Senet</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <small style="color: #666; display: block; margin-bottom: 3px;">Tutar</small>
+                            <input type="number" id="senet-${i}-amount" placeholder="₺15.000" step="0.01" value="${savedValues[`amount-${i}`] || ''}" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;" oninput="calculateSenetTotal()">
+                        </div>
+                        <div>
+                            <small style="color: #666; display: block; margin-bottom: 3px;">Vade Tarihi</small>
+                            <input type="date" id="senet-${i}-date" value="${savedValues[`date-${i}`] || ''}" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(senetDiv);
+            }
+            
+            calculateSenetTotal();
+        }
+
+        function calculateSenetTotal() {
+            let total = 0;
+            for (let i = 1; i <= senetCount; i++) {
+                const amountInput = document.getElementById(`senet-${i}-amount`);
+                if (amountInput && amountInput.value) {
+                    total += parseFloat(amountInput.value) || 0;
+                }
+            }
+            
+            const totalElement = document.getElementById('senet-total');
+            if (totalElement) {
+                totalElement.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2});
+            }
+        }
+
+        document.getElementById('payment-type').addEventListener('change', function() {
+            const senetDates = document.getElementById('senet-dates');
+            const amountGroup = document.getElementById('amount').closest('.form-group');
+            
+            if (this.value === 'senet') {
+                senetDates.classList.remove('hidden');
+                amountGroup.style.display = 'none';
+                senetCount = 1;
+                renderSenetList();
+                calculateSenetTotal();
+            } else {
+                senetDates.classList.add('hidden');
+                amountGroup.style.display = 'block';
+            }
+        });
+
+        document.getElementById('payment-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = window.currentUserId();
+            if (!userId) {
+                alert('Lütfen giriş yapın!');
+                return;
+            }
+
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const paymentType = document.getElementById('payment-type').value;
+            const note = document.getElementById('note').value;
+            
+            const { collection, addDoc, Timestamp } = window.firebaseModules;
+            
+            try {
+                if (paymentType === 'senet') {
+                    let addedCount = 0;
+                    
+                    for (let i = 1; i <= senetCount; i++) {
+                        const amt = document.getElementById(`senet-${i}-amount`)?.value;
+                        const date = document.getElementById(`senet-${i}-date`)?.value;
+                        
+                        if (date && amt && parseFloat(amt) > 0) {
+                            await addDoc(collection(window.firebaseDb, 'payments'), {
+                                userId,
+                                customerName,
+                                customerPhone,
+                                amount: parseFloat(amt),
+                                dueDate: date,
+                                note: note ? `${note} (${i}. Senet)` : `${i}. Senet`,
+                                isPaid: false,
+                                createdAt: Timestamp.now()
+                            });
+                            addedCount++;
+                        }
+                    }
+                    
+                    if (addedCount === 0) {
+                        alert('⚠️ En az bir senet için tutar ve tarih girmelisiniz!');
+                        return;
+                    }
+                } else {
+                    const today = new Date();
+                    const dueDate = new Date(today);
+                    dueDate.setDate(today.getDate() + parseInt(paymentType));
+                    
+                    await addDoc(collection(window.firebaseDb, 'payments'), {
+                        userId,
+                        customerName,
+                        customerPhone,
+                        amount,
+                        dueDate: dueDate.toISOString().split('T')[0],
+                        note,
+                        isPaid: false,
+                        createdAt: Timestamp.now()
+                    });
+                }
+                
+                this.reset();
+                document.getElementById('senet-dates').classList.add('hidden');
+                
+                alert('✅ Ödeme başarıyla eklendi!');
+                await loadPayments();
+                showTab('dashboard');
+            } catch (error) {
+                console.error('Ödeme eklenirken hata:', error);
+                alert('❌ Ödeme eklenemedi!');
+            }
+        });
+
+        function renderDashboard() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const lists = {
+                today: [],
+                tomorrow: [],
+                twoDays: [],
+                threeDays: [],
+                upcoming: []
+            };
+            
+            payments.filter(p => !p.isPaid).forEach(payment => {
+                const dueDate = new Date(payment.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                
+                const diffTime = dueDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) lists.today.push(payment);
+                else if (diffDays === 1) lists.tomorrow.push(payment);
+                else if (diffDays === 2) lists.twoDays.push(payment);
+                else if (diffDays === 3) lists.threeDays.push(payment);
+                else if (diffDays > 3 && diffDays <= 30) lists.upcoming.push(payment);
+            });
+            
+            lists.upcoming.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            renderList('today-list', lists.today, 'today', 'today-count');
+            renderList('tomorrow-list', lists.tomorrow, 'tomorrow', 'tomorrow-count');
+            renderList('two-days-list', lists.twoDays, 'two-days', 'two-days-count');
+            renderList('three-days-list', lists.threeDays, 'three-days', 'three-days-count');
+            renderList('upcoming-list', lists.upcoming, '', 'upcoming-count');
+        }
+
+        function renderList(elementId, items, className, countId) {
+            const container = document.getElementById(elementId);
+            const countBadge = document.getElementById(countId);
+            
+            if (items.length === 0) {
+                container.innerHTML = '<div class="empty-state">Ödeme yok</div>';
+                countBadge.classList.add('hidden');
+            } else {
+                countBadge.textContent = items.length;
+                countBadge.classList.remove('hidden');
+                
+                container.innerHTML = items.map(payment => {
+                    let dayInfo = '';
+                    if (elementId === 'upcoming-list') {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const dueDate = new Date(payment.dueDate);
+                        dueDate.setHours(0, 0, 0, 0);
+                        const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                        dayInfo = ` • ${diffDays} gün sonra`;
+                    }
+                    
+                    return `
+                        <div class="payment-item ${className}">
+                            <div class="payment-info">
+                                <strong>${payment.customerName}</strong>
+                                <small>₺${payment.amount.toLocaleString('tr-TR', {minimumFractionDigits: 2})} • ${formatDate(payment.dueDate)}${dayInfo}</small>
+                                ${payment.note ? `<br><small style="color: #999;">📝 ${payment.note}</small>` : ''}
+                            </div>
+                            <div class="payment-actions">
+                                <button class="btn-sm" style="background: #25D366; color: white;" onclick="sendWhatsApp('${payment.customerPhone}', '${payment.customerName}', ${payment.amount}, '${payment.dueDate}')">💬</button>
+                                <button class="btn-sm btn-success" onclick="markAsPaid('${payment.firestoreId}')">✓</button>
+                                <button class="btn-sm btn-danger" onclick="deletePayment('${payment.firestoreId}')">🗑</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function renderAllPayments() {
+            const container = document.getElementById('all-payments-list');
+            const allPayments = [...payments].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            if (allPayments.length === 0) {
+                container.innerHTML = '<div class="empty-state">Henüz ödeme eklenmemiş</div>';
+            } else {
+                container.innerHTML = allPayments.map(payment => {
+                    const today = new Date();
+                    const dueDate = new Date(payment.dueDate);
+                    const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    if (payment.isPaid) {
+                        statusClass = 'three-days';
+                        statusText = '✓ Ödendi';
+                    } else if (diffDays < 0) {
+                        statusClass = 'today';
+                        statusText = `⚠️ ${Math.abs(diffDays)} gün gecikmiş`;
+                    } else if (diffDays === 0) {
+                        statusClass = 'today';
+                        statusText = '🔴 Bugün';
+                    } else if (diffDays === 1) {
+                        statusClass = 'tomorrow';
+                        statusText = '🟠 Yarın';
+                    } else if (diffDays === 2) {
+                        statusClass = 'two-days';
+                        statusText = '🟡 2 gün sonra';
+                    } else if (diffDays === 3) {
+                        statusClass = 'three-days';
+                        statusText = '🟢 3 gün sonra';
+                    } else {
+                        statusText = `${diffDays} gün sonra`;
+                    }
+                    
+                    return `
+                        <div class="payment-item ${statusClass}" style="opacity: ${payment.isPaid ? '0.6' : '1'}">
+                            <div class="payment-info">
+                                <strong>${payment.customerName}</strong>
+                                <small>₺${payment.amount.toLocaleString('tr-TR', {minimumFractionDigits: 2})} • ${formatDate(payment.dueDate)}</small>
+                                <br><small style="color: #999;">${statusText}</small>
+                                ${payment.note ? `<br><small style="color: #999;">📝 ${payment.note}</small>` : ''}
+                            </div>
+                            ${!payment.isPaid ? `
+                                <div class="payment-actions">
+                                    <button class="btn-sm" style="background: #25D366; color: white;" onclick="sendWhatsApp('${payment.customerPhone}', '${payment.customerName}', ${payment.amount}, '${payment.dueDate}')">💬</button>
+                                    <button class="btn-sm btn-success" onclick="markAsPaid('${payment.firestoreId}')">✓</button>
+                                    <button class="btn-sm btn-danger" onclick="deletePayment('${payment.firestoreId}')">🗑</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        async function markAsPaid(firestoreId) {
+            if (confirm('Bu ödeme yapıldı olarak işaretlensin mi?')) {
+                try {
+                    const { doc, updateDoc } = window.firebaseModules;
+                    await updateDoc(doc(window.firebaseDb, 'payments', firestoreId), {
+                        isPaid: true
+                    });
+                    await loadPayments();
+                } catch (error) {
+                    console.error('Güncelleme hatası:', error);
+                    alert('Ödeme güncellenemedi!');
+                }
+            }
+        }
+
+        async function deletePayment(firestoreId) {
+            if (confirm('Bu ödeme kaydı silinsin mi?')) {
+                try {
+                    const { doc, deleteDoc } = window.firebaseModules;
+                    await deleteDoc(doc(window.firebaseDb, 'payments', firestoreId));
+                    await loadPayments();
+                } catch (error) {
+                    console.error('Silme hatası:', error);
+                    alert('Ödeme silinemedi!');
+                }
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('tr-TR', options);
+        }
+
+        function sendWhatsApp(phone, customerName, amount, dueDate) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            const formattedPhone = cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone;
+            const dueDateFormatted = formatDate(dueDate);
+            
+            const message = `Sayın ${customerName},
+
+${dueDateFormatted} tarihinde vadesi gelen ${amount.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺ tutarındaki ödemenizi hatırlatmak isterim.
+
+İyi çalışmalar dilerim.
+
+Ali Demir
+Atlaspet Pet Ürünleri`;
+            
+            const whatsappUrl = `https://wa.me/90${formattedPhone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function exportToExcel() {
+            if (payments.length === 0) {
+                alert('Dışa aktarılacak ödeme bulunmuyor!');
+                return;
+            }
+
+            let csvContent = '\uFEFF';
+            csvContent += 'Müşteri Adı,Telefon,Tutar (₺),Vade Tarihi,Not,Durum,Eklenme Tarihi\n';
+            
+            const sortedPayments = [...payments].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            sortedPayments.forEach(payment => {
+                const createdDate = payment.createdAt?.toDate ? payment.createdAt.toDate() : new Date();
+                const row = [
+                    payment.customerName || '',
+                    payment.customerPhone || '',
+                    payment.amount.toFixed(2),
+                    formatDate(payment.dueDate),
+                    (payment.note || '').replace(/,/g, ';'),
+                    payment.isPaid ? 'Ödendi' : 'Bekliyor',
+                    createdDate.toLocaleDateString('tr-TR')
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+            
+            const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+            const totalPaid = payments.filter(p => p.isPaid).reduce((sum, p) => sum + p.amount, 0);
+            const totalPending = totalAmount - totalPaid;
+            
+            csvContent += '\n';
+            csvContent += `Toplam Tutar,,${totalAmount.toFixed(2)}\n`;
+            csvContent += `Ödenen Tutar,,${totalPaid.toFixed(2)}\n`;
+            csvContent += `Bekleyen Tutar,,${totalPending.toFixed(2)}\n`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const today = new Date();
+            const filename = `Atlaspet_Vade_Takip_${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}.csv`;
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`✅ ${payments.length} ödeme Excel'e aktarıldı!\nDosya adı: ${filename}`);
+        }
+    </script>
+</body>
+</html>
