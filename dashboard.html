@@ -584,6 +584,43 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                
+                // Kullanıcı durumunu kontrol et
+                try {
+                    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    
+                    if (!userDoc.exists()) {
+                        // Firestore'da kullanıcı yoksa oluştur (eski kullanıcılar için)
+                        const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                        await setDoc(doc(db, 'users', user.uid), {
+                            name: user.displayName || 'İsimsiz',
+                            email: user.email,
+                            status: 'active',
+                            createdAt: new Date().toISOString()
+                        });
+                    } else {
+                        const userData = userDoc.data();
+                        
+                        // Pending veya disabled ise çıkış yap
+                        if (userData.status === 'pending') {
+                            alert('⏳ Hesabınız henüz onaylanmadı!\n\nAdmin onayı bekleniyor. Lütfen daha sonra tekrar deneyin.');
+                            await auth.signOut();
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                        
+                        if (userData.status === 'disabled') {
+                            alert('🚫 Hesabınız pasifleştirilmiş!\n\nDetaylı bilgi için yöneticinizle iletişime geçin.');
+                            await auth.signOut();
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Kullanıcı durumu kontrol hatası:', error);
+                }
+                
                 document.getElementById('user-display').textContent = user.displayName || user.email;
                 document.getElementById('initial-loading').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
